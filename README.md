@@ -43,15 +43,20 @@ Grant **Accessibility** permission for the terminal you run from if macOS prompt
 
 Config is stored at `~/.macstats/config.json` after you hit **Save settings** in the app menu.
 
-## Packaging into a .app (optional)
+## Packaging into a .app
 
-You can use `py2app` if you want a double‑clickable `.app`:
+Run the build script to produce a fully self-contained `MacStats.app` — **no Python required on the target machine**:
 
 ```bash
-pip install py2app
-python3 setup.py py2app
-open dist/MacStats.app
+./build.sh
 ```
+
+The app is output to `dist/MacStats.app`. You can:
+- Double-click it to run
+- Drag it to `/Applications`
+- Zip and distribute it to users — everything is bundled inside
+
+> Powered by [PyInstaller](https://pyinstaller.org). The app icon and all dependencies are embedded in the bundle.
 
 > Note: First launch of unsigned apps may require right‑click → Open.
 

@@ -13,7 +13,7 @@
 # Packaging (optional):
 #   python3 setup.py py2app
 #
-# Notes:
+# Notes:ck
 # - GPU is marked experimental. Accurate GPU utilization on macOS isn't exposed via psutil.
 #   You can try powermetrics (Apple Silicon, requires sudo) and adapt the placeholder in get_gpu().
 # - On first run, a config file is created at ~/.macstats/config.json
