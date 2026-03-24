@@ -1,2 +1,3 @@
 rumps==0.4.0
 psutil>=5.9.0
+py2app
