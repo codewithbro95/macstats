@@ -1,0 +1,55 @@
+name: Release MacStats
+
+on:
+  push:
+    tags:
+      - 'v*'   # triggers on tags like v1.0.0, v1.2.3, etc.
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: macstats
+          environment-file: environment.yml
+          auto-activate-base: false
+
+      - name: Read version
+        id: version
+        run: echo "version=$(cat VERSION | tr -d '[:space:]')" >> $GITHUB_OUTPUT
+
+      - name: Build MacStats.app
+        shell: bash -el {0}
+        run: |
+          conda activate macstats
+          pyinstaller MacStats.spec --clean --noconfirm
+
+      - name: Zip the app
+        run: |
+          cd dist
+          zip -r MacStats-${{ steps.version.outputs.version }}.zip MacStats.app
+          cd ..
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: MacStats ${{ steps.version.outputs.version }}
+          body: |
+            ## MacStats ${{ steps.version.outputs.version }}
+
+            ### Installation
+            1. Download `MacStats-${{ steps.version.outputs.version }}.zip` below
+            2. Unzip and drag `MacStats.app` to your Applications folder
+            3. Right-click → Open on first launch (unsigned app)
+
+            > Fully self-contained — no Python installation required.
+          files: dist/MacStats-${{ steps.version.outputs.version }}.zip
+          draft: false
+          prerelease: false

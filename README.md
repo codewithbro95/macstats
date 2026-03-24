@@ -76,6 +76,20 @@ The app is output to `dist/MacStats.app`. You can:
 - Export snapshot to clipboard
 - Configurable update interval
 
+## Releases and Versioning
+
+1.  **Bump version**: Update the [`VERSION`](file:///Users/fotiem.constant/Documents/gitrepo/personal/opensource/macstats-menu-app/macstats/VERSION) file (e.g., `1.1.0`).
+2.  **Tag it**:
+    ```bash
+    git add VERSION
+    git commit -m "Bump version to 1.1.0"
+    git tag v1.1.0
+    git push origin main --tags
+    ```
+3.  **Auto-build**: The [GitHub Action](file:///Users/fotiem.constant/Documents/gitrepo/personal/opensource/macstats-menu-app/macstats/.github/workflows/release.yml) will automatically build the self-contained `.app`, zip it, and create a [GitHub Release](https://github.com/codewithbro95/macstats/releases).
+
+Existing users can use the **Check for Update** menu item to see if there's a new version available.
+
 ## License
 
 MIT

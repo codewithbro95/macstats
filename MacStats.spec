@@ -6,12 +6,17 @@ import os
 
 block_cipher = None
 
+# Read version from the VERSION file at build time
+with open('VERSION') as _f:
+    APP_VERSION = _f.read().strip()
+
 a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
     datas=[
         ('assets/app-icon.icns', 'assets'),
+        ('VERSION', '.'),   # bundled so main.py can read it at runtime
     ],
     hiddenimports=[
         'rumps',
@@ -71,11 +76,11 @@ app = BUNDLE(
     info_plist={
         'CFBundleName': 'MacStats',
         'CFBundleDisplayName': 'MacStats',
-        'CFBundleVersion': '1.0.0',
-        'CFBundleShortVersionString': '1.0.0',
+        'CFBundleVersion': APP_VERSION,
+        'CFBundleShortVersionString': APP_VERSION,
         'NSPrincipalClass': 'NSApplication',
         'NSHighResolutionCapable': True,
-        'LSUIElement': True,          # hides Dock icon — menu bar agent only
+        'LSUIElement': True,
         'NSAppleEventsUsageDescription': 'MacStats needs Accessibility access to display system stats.',
     },
 )

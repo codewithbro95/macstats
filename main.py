@@ -19,20 +19,93 @@
 # - On first run, a config file is created at ~/.macstats/config.json
 
 import os
+import sys
 import json
 import time
 import shutil
 import socket
 import subprocess
+import threading
+import urllib.request
+import urllib.error
 from pathlib import Path
 from typing import Dict, Any, Tuple
 
 import rumps
 import psutil
 
+# ---------------------------------------------------------------------------
+# Version — read from bundled VERSION file so it stays in sync with releases
+# ---------------------------------------------------------------------------
+def _read_version() -> str:
+    """Read version from the VERSION file, whether running from source or a bundle."""
+    # When frozen by PyInstaller, sys._MEIPASS points to the bundle root
+    if getattr(sys, 'frozen', False):
+        base = Path(sys._MEIPASS)
+    else:
+        base = Path(__file__).parent
+    version_file = base / 'VERSION'
+    try:
+        return version_file.read_text().strip()
+    except Exception:
+        return '0.0.0'
+
+APP_VERSION = _read_version()
+GITHUB_REPO = 'codewithbro95/macstats'  # update if you rename the repo
+
 APP_NAME = "MacStats"
 CONFIG_DIR = Path.home() / ".macstats"
 CONFIG_PATH = CONFIG_DIR / "config.json"
+
+# ---------------------------------------------------------------------------
+# Update checker
+# ---------------------------------------------------------------------------
+def _parse_version(v: str):
+    """Return a tuple of ints for semver comparison, e.g. '1.2.3' → (1, 2, 3)."""
+    v = v.lstrip('v')
+    try:
+        return tuple(int(x) for x in v.split('.'))
+    except ValueError:
+        return (0, 0, 0)
+
+def check_for_update_bg(notify_no_update: bool = True):
+    """Check GitHub Releases API for a newer version. Run on a background thread."""
+    url = f'https://api.github.com/repos/{GITHUB_REPO}/releases/latest'
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': f'{APP_NAME}/{APP_VERSION}'})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read())
+        latest_tag = data.get('tag_name', '')
+        latest_ver = latest_tag.lstrip('v')
+        html_url = data.get('html_url', f'https://github.com/{GITHUB_REPO}/releases')
+
+        if _parse_version(latest_ver) > _parse_version(APP_VERSION):
+            # Show notification on the main thread
+            rumps.notification(
+                title=APP_NAME,
+                subtitle=f'Update available: v{latest_ver}',
+                message='Click to open the download page.',
+                action_button='Download',
+            )
+            # Open URL — rumps notifications don't have callbacks in all macOS versions,
+            # so we open via subprocess as a fallback after a short delay.
+            subprocess.Popen(['open', html_url])
+        else:
+            if notify_no_update:
+                rumps.notification(
+                    title=APP_NAME,
+                    subtitle='You\'re up to date!',
+                    message=f'Current version: v{APP_VERSION}',
+                )
+    except urllib.error.URLError:
+        if notify_no_update:
+            rumps.notification(
+                title=APP_NAME,
+                subtitle='Update check failed',
+                message='Could not reach GitHub. Check your internet connection.',
+            )
+    except Exception:
+        pass  # silently swallow unexpected errors
 
 DEFAULT_CONFIG = {
     "modules": {
@@ -116,6 +189,9 @@ class MacStatsApp(rumps.App):
         self.menu.add(None)  # separator
         self.menu.add(rumps.MenuItem("Refresh now", callback=self._refresh_now))
         self.menu.add(rumps.MenuItem("Save settings", callback=self._save_settings))
+        self.menu.add(None)  # separator
+        self.menu.add(rumps.MenuItem(f"v{APP_VERSION}", callback=None))  # version display
+        self.menu.add(rumps.MenuItem("Check for Update", callback=self._check_update))
         self.menu.add(rumps.MenuItem("Quit", callback=self._quit))
 
         # Timer for updates
@@ -140,6 +216,11 @@ class MacStatsApp(rumps.App):
     #  App control 
     def _quit(self, _):
         rumps.quit_application()
+
+    def _check_update(self, _):
+        """Kick off an update check in a background thread so the UI stays responsive."""
+        t = threading.Thread(target=check_for_update_bg, kwargs={'notify_no_update': True}, daemon=True)
+        t.start()
 
     def _refresh_now(self, _):
         self._update_title(force=True)

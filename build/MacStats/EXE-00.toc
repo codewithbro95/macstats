@@ -53,7 +53,7 @@
  [],
  False,
  False,
- 1774360844,
+ 1774362205,
  [('runw',
    '/Users/fotiem.constant/anaconda3/envs/macstats/lib/python3.14/site-packages/PyInstaller/bootloader/Darwin-64bit/runw',
    'EXECUTABLE')],
