@@ -13,16 +13,30 @@ A tiny, configurable **menu bar** app for macOS written in Python. Choose which 
 
 ## Quick start
 
-```bash
-# Create a venv (recommended)
-python3 -m venv .venv
-source .venv/bin/activate
+Requires [conda](https://docs.conda.io/en/latest/) (Anaconda or Miniconda) to be installed.
 
-# Install deps
-pip install -r requirements.txt
+```bash
+./start.sh
+```
+
+That's it. `start.sh` will:
+1. Create (or update) the `macstats` conda environment from `environment.yml`
+2. Activate the environment
+3. Launch the app
+
+### Manual setup (optional)
+
+If you prefer to manage the environment yourself:
+
+```bash
+# Create the conda environment
+conda env create -f environment.yml
+
+# Activate it
+conda activate macstats
 
 # Run
-python3 main.py
+python main.py
 ```
 
 Grant **Accessibility** permission for the terminal you run from if macOS prompts you (rumps embeds a status item; usually no special permission is needed for reading stats, but prompts can vary).
